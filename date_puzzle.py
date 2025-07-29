@@ -1,7 +1,6 @@
 from blocks import BLOCKS
-import progressbar
-from copy import copy
-PROGRESS = True
+from pprint import pprint
+from copy import copy, deepcopy
 
 def print_puzzle(rotations, bases):
     #print(rotations)
@@ -36,7 +35,8 @@ def find_disconnected_regions(puzzleSpace):
 #    return regions
 
     regions = []
-    copy_puzzleSpace = copy(puzzleSpace)
+    #copy_puzzleSpace = copy(puzzleSpace)
+    copy_puzzleSpace = set().union(puzzleSpace)
 
     while copy_puzzleSpace:
         regions.append(set())
@@ -48,22 +48,36 @@ def find_disconnected_regions(puzzleSpace):
             for d in (1, -1, 1j, -1j):
                 if space + d in copy_puzzleSpace:
                     frontier.add(space + d)
-                    copy_puzzleSpace.remove(space + d)
+            copy_puzzleSpace -= frontier
     return regions
 
-def solve(puzzleSpace, blockNum=0, rotations=None, bases=None):
-    #global bar
+def adjust_regions(regions, attempt):
+    regions = deepcopy(regions)
+    #pprint(f'{regions=}')
+    #pprint(f'{attempt=}')
+    i = next(i for i in range(len(regions)) if regions[i] & attempt)
+    region = regions[i]
+    region -= attempt
+    regions[i:i+1] = find_disconnected_regions(region)
+    #print(f'{regions=}')
+    #print()
+    #return regions
+
+def solve(puzzleSpace, blockNum=0, rotations=None, bases=None, regions=None):
     if rotations is None:
         rotations = []
     if bases is None:
         bases = []
+    if regions is None:
+        regions = [copy(puzzleSpace),]
     if blockNum >= len(BLOCKS):
         # found a solution
         print_puzzle(rotations, bases)
         return 1
 
+    assert set().union(*regions) == puzzleSpace
+
     #print_puzzle(rotations, bases)
-    regions = find_disconnected_regions(puzzleSpace)
 
     if MIN_BLOCK_SIZE > min(len(region) for region in regions):
         #print('too small', blockNum)
@@ -83,11 +97,17 @@ def solve(puzzleSpace, blockNum=0, rotations=None, bases=None):
             #attempt = {base + vector for vector in block}
             attempt = ATTEMPTS[blockNum, b, base]
             if attempt & puzzleSpace == attempt:
-                t += solve(puzzleSpace - attempt, blockNum + 1, rotations+[b,], bases+[base,])
-            #if t > 20:
-                #exit()
-    if PROGRESS:
-        bar.update(t)
+                #print_puzzle(rotations, bases)
+                i = next(i for i in range(len(regions)) if regions[i] & attempt)
+                region = regions[i]
+                region -= attempt
+                newregions = find_disconnected_regions(region)
+                regions[i:i+1] = newregions
+                newregions_len = len(newregions)
+                t += solve(puzzleSpace - attempt, blockNum + 1, rotations+[b,], bases+[base,], regions)
+                regions[i:i+newregions_len] = [set().union(*regions[i:i+newregions_len]) | attempt]
+#            if t > 20:
+#                exit()
     return t
 
 MIN_BLOCK_SIZE = min(len(BLOCKS[x][0]) for x in range(len(BLOCKS)))
@@ -116,8 +136,5 @@ for blockNum in range(10):
 
 
 numTrials = len(puzzleSpace) * 8
-if PROGRESS:
-    with progressbar.ProgressBar(redirect_stdout=True) as bar:
-        print(solve(puzzleSpace))
-else:
-    print(solve(puzzleSpace))
+print(solve(puzzleSpace))
+
