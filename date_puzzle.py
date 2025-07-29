@@ -1,6 +1,8 @@
+import multiprocessing
 from blocks import BLOCKS
 from pprint import pprint
 from copy import copy, deepcopy
+import time
 
 def print_puzzle(rotations, bases):
     #print(rotations)
@@ -63,7 +65,7 @@ def adjust_regions(regions, attempt):
     #print()
     #return regions
 
-def solve(puzzleSpace, blockNum=0, rotations=None, bases=None, regions=None):
+def solve(puzzleSpace, rotation=None, blockNum=0, rotations=None, bases=None, regions=None):
     if rotations is None:
         rotations = []
     if bases is None:
@@ -91,7 +93,11 @@ def solve(puzzleSpace, blockNum=0, rotations=None, bases=None, regions=None):
         #and attempt & puzzleSpace == attempt
     #)
     t = 0
-    for b, block in enumerate(BLOCKS[blockNum]):
+    if rotation is None:
+        source = enumerate(BLOCKS[blockNum])
+    else:
+        source = ([rotation, BLOCKS[blockNum][rotation]],)
+    for b, block in source:
         #for base in sorted(puzzleSpace, key=lambda x: (x.imag, x.real)):
         for base in BLOCK_PLACES[blockNum][b]:
             #attempt = {base + vector for vector in block}
@@ -104,7 +110,7 @@ def solve(puzzleSpace, blockNum=0, rotations=None, bases=None, regions=None):
                 newregions = find_disconnected_regions(region)
                 regions[i:i+1] = newregions
                 newregions_len = len(newregions)
-                t += solve(puzzleSpace - attempt, blockNum + 1, rotations+[b,], bases+[base,], regions)
+                t += solve(puzzleSpace - attempt, blockNum=blockNum + 1, rotations=rotations+[b,], bases=bases+[base,], regions=regions)
                 regions[i:i+newregions_len] = [set().union(*regions[i:i+newregions_len]) | attempt]
 #            if t > 20:
 #                exit()
@@ -136,5 +142,13 @@ for blockNum in range(10):
 
 
 numTrials = len(puzzleSpace) * 8
-print(solve(puzzleSpace))
 
+if __name__ == '__main__':
+    start = time.time()
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        results = pool.starmap(solve, zip([puzzleSpace]*8, range(8)))
+    print(results)
+    print(sum(results))
+
+    end = time.time()
+    print("elapsed:", end - start)
