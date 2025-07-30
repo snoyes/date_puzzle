@@ -3,10 +3,15 @@ from blocks import BLOCKS
 from pprint import pprint
 from copy import copy, deepcopy
 import time
+from datetime import date, timedelta
+from date_frames import get_date_holes
 
-def print_puzzle(rotations, bases):
+def print_puzzle(rotations, bases, current_date):
+    dateHoles = get_date_holes(current_date)
+    trim = {6, 6+1j, 0+7j, 1+7j, 2+7j, 3+7j}
     #print(rotations)
     #print(bases)
+    result = ''
     output = {x: set() for x in range(10)}
     for i in range(len(rotations)):
         block = BLOCKS[i][rotations[i]]
@@ -18,9 +23,9 @@ def print_puzzle(rotations, bases):
             for i in output:
                 if complex(col, row) in output[i]:
                     char = str(i)
-            print(char, end='')
-        #print()
-    print(flush=True)
+            result += char
+    with open('results/' + str(current_date) + '.txt', 'a') as f:
+        f.write(result + '\n')
 
 def find_disconnected_regions(puzzleSpace):
 #    regions = []
@@ -65,7 +70,7 @@ def adjust_regions(regions, attempt):
     #print()
     #return regions
 
-def solve(puzzleSpace, rotation=None, blockNum=0, rotations=None, bases=None, regions=None):
+def solve(puzzleSpace, rotation=None, BLOCKS=None, BLOCK_PLACES=None, ATTEMPTS=None, currentDate=None, blockNum=0, rotations=None, bases=None, regions=None):
     if rotations is None:
         rotations = []
     if bases is None:
@@ -74,7 +79,7 @@ def solve(puzzleSpace, rotation=None, blockNum=0, rotations=None, bases=None, re
         regions = [copy(puzzleSpace),]
     if blockNum >= len(BLOCKS):
         # found a solution
-        print_puzzle(rotations, bases)
+        print_puzzle(rotations, bases, currentDate)
         return 1
 
     assert set().union(*regions) == puzzleSpace
@@ -110,7 +115,7 @@ def solve(puzzleSpace, rotation=None, blockNum=0, rotations=None, bases=None, re
                 newregions = find_disconnected_regions(region)
                 regions[i:i+1] = newregions
                 newregions_len = len(newregions)
-                t += solve(puzzleSpace - attempt, blockNum=blockNum + 1, rotations=rotations+[b,], bases=bases+[base,], regions=regions)
+                t += solve(puzzleSpace=puzzleSpace-attempt, rotation=None, BLOCKS=BLOCKS, BLOCK_PLACES=BLOCK_PLACES, ATTEMPTS=ATTEMPTS, currentDate=currentDate, blockNum=blockNum + 1, rotations=rotations+[b,], bases=bases+[base,], regions=regions)
                 regions[i:i+newregions_len] = [set().union(*regions[i:i+newregions_len]) | attempt]
 #            if t > 20:
 #                exit()
@@ -118,9 +123,6 @@ def solve(puzzleSpace, rotation=None, blockNum=0, rotations=None, bases=None, re
 
 MIN_BLOCK_SIZE = min(len(BLOCKS[x][0]) for x in range(len(BLOCKS)))
 
-trim = {6, 6+1j, 0+7j, 1+7j, 2+7j, 3+7j}
-dateHoles = {1j, 3+5j, 5+7j}
-puzzleSpace = {complex(col, row) for col in range(7) for row in range(8)} - trim - dateHoles
 def get_block_places(puzzleSpace, BLOCKS):
     blockPlaces = {x: [set() for _ in range(len(BLOCKS[x]))] for x in BLOCKS}
     for k in BLOCKS:
@@ -131,24 +133,39 @@ def get_block_places(puzzleSpace, BLOCKS):
                     blockPlaces[k][b].add(base)
     return blockPlaces
 
-BLOCK_PLACES = get_block_places(puzzleSpace, BLOCKS)
-
-
-ATTEMPTS = dict()
-for blockNum in range(10):
-    for b, block in enumerate(BLOCKS[blockNum]):
-        for base in BLOCK_PLACES[blockNum][b]:
-            ATTEMPTS[(blockNum, b, base)] = {base + vector for vector in block}
-
-
-numTrials = len(puzzleSpace) * 8
 
 if __name__ == '__main__':
-    start = time.time()
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        results = pool.starmap(solve, zip([puzzleSpace]*8, range(8)))
-    print(results)
-    print(sum(results))
+    trim = {6, 6+1j, 0+7j, 1+7j, 2+7j, 3+7j}
 
-    end = time.time()
-    print("elapsed:", end - start)
+    current_date = date(2025, 7, 25)
+    end_date = date(2025, 12, 25)
+    total_results = 0
+
+    while current_date <= end_date:
+        start = time.time()
+
+        dateHoles = get_date_holes(current_date)
+        puzzleSpace = {complex(col, row) for col in range(7) for row in range(8)} - trim - dateHoles
+        BLOCK_PLACES = get_block_places(puzzleSpace, BLOCKS)
+
+        ATTEMPTS = dict()
+        for blockNum in range(10):
+            for b, block in enumerate(BLOCKS[blockNum]):
+                for base in BLOCK_PLACES[blockNum][b]:
+                    ATTEMPTS[(blockNum, b, base)] = {base + vector for vector in block}
+
+
+        numTrials = len(puzzleSpace) * 8
+
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            results = pool.starmap(solve, [(puzzleSpace, rotation, BLOCKS, BLOCK_PLACES, ATTEMPTS, current_date) for rotation in range(8)])
+
+        end = time.time()
+        total_results += sum(results)
+        print(current_date)
+        print(results)
+        print(sum(results))
+        print("elapsed:", end - start)
+        print(flush=True)
+        current_date += timedelta(days=1)
+    print(f'{total_results=}')
