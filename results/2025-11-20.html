@@ -1,3 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+body {
+    font-family: monospace;
+    counter-reset: section;
+}
+
+#container {
+color: #334155;
+}
+
+#container span { 
+    display: inline-block;
+    width: 1.1em;
+    text-align: center;
+}
+
+.b0 { background-color: #4A90E2;}
+.b1 { background-color: #FF6B6B;}
+.b2 { background-color: #82E0AA;}
+.b3 { background-color: #F7DC6F;}
+.b4 { background-color: #BB8FCE;}
+.b5 { background-color: #F5B7B1;}
+.b6 { background-color: #64B5F6;}
+.b7 { background-color: #FFA07A;}
+.b8 { background-color: #A2D9CE;}
+.b9 { background-color: #FFD700;}
+.bF { color: #e8eaec; background-color: #e8eaec;}
+.bH { color: #FFFFFF; }
+
+#container div {
+    display: inline-block;
+    font-family: monospace;
+    margin: 0.5em;
+    background-color: #f8fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #e2e8f0;
+}
+
+#container div::before {
+  counter-increment: section;
+  content: counter(section) "\A";
+  white-space: pre-wrap;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+        const inputText = document.getElementById('container').innerHTML.trim();
+        const outputDiv = document.getElementById('container');
+
+        let formattedHtml = '';
+
+        const lines = inputText.split('\n');
+
+        lines.forEach(line => {
+            let lineHtml = '';
+            for (let i = 0; i < line.length; i++) {
+                // Wrap each character in a <span> tag
+                lineHtml += `<span class="b${line[i]}">${line[i]}</span>`;
+
+                // Insert a <br> tag after every 7th character
+                // Ensure it's not the last character of the line
+                if ((i + 1) % 7 === 0 && (i + 1) < line.length) {
+                    lineHtml += `<br>`;
+                }
+            }
+            formattedHtml += `<div>${lineHtml}</div>`;
+        });
+
+        outputDiv.innerHTML = formattedHtml;
+});
+</script>
+
+</head>
+<body>
+<div id="container">
 000111F0021H1F5522228455588847779H844479993333669FFFFH66
 000111F0021H1F5522229455599947779H844478883333668FFFFH66
 000111F0051H1F2554448257488825749H822779993333669FFFFH66
@@ -4971,3 +5050,6 @@
 996444F5966H4F5996141550011185000H288877728333372FFFFH22
 996444F7966H4F7996141778211188825H300825530002253FFFFH53
 997778F4972H8F4992888444211300221H300661130665553FFFFH55
+</div>
+</body>
+</html>
