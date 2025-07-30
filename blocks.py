@@ -1,102 +1,53 @@
+from collections import defaultdict
+
+# Each block is rectangular; trailing spaces are important
 blocks_text = """
 000
  00
 
-000
-00
-
-111
-1 1
-
 111
 1 1
 
 2222
-2
+2   
 
-2222
-   2
-
-3
-3
-3
-3
-
-3
-3
-3
-3
+3333
 
 444
-4
-4
+4  
+4  
 
-444
-4
-4
-
-5
-55
- 5
- 5
-
-555
+555 
   55
 
-6
-66
- 6
-
-66
+66 
  66
 
-7
-7
-77
+777
+7  
 
-77
-7
-7
-
-8
+8  
 888
-8
+8  
 
-8
-888
-8
-
-9
+9  
 999
   9
-
-99
- 9
- 99
 """.strip()
 
-BLOCKS = {x: [set() for _ in range(8)] for x in range(10)}
-seen = 1
-for block in blocks_text.split('\n\n'):
-    seen = 1 - seen
-    for imag, line in enumerate(block.split('\n')):
-        for real, c in enumerate(line):
-            if c.isdigit():
-                BLOCKS[int(c)][0+4*seen].add(complex(real, imag))
-                BLOCKS[int(c)][1+4*seen].add(complex(imag, -real))
-                BLOCKS[int(c)][2+4*seen].add(complex(-real, -imag))
-                BLOCKS[int(c)][3+4*seen].add(complex(-imag, real))
+BLOCKS = defaultdict(set)
+for i, block in enumerate(blocks_text.split('\n\n')):
+    block = [list(line) for line in block.split('\n')]
+    for _ in range(4):
+        # transpose
+        block = [list(row) for row in zip(*block)]
+        BLOCKS[i].add(frozenset({col+row*1j for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
 
-#TODO: better symmetry detection
-for k in BLOCKS:
-    if len(BLOCKS[k][4]) == 0:
-        BLOCKS[k] = BLOCKS[k][:4]
-BLOCKS[1] = BLOCKS[1][:4]
-BLOCKS[3] = BLOCKS[3][:2]
-BLOCKS[4] = BLOCKS[4][:4]
-BLOCKS[6] = BLOCKS[6][0:2] + BLOCKS[6][4:6]
-BLOCKS[8] = BLOCKS[8][:4]
-BLOCKS[9] = BLOCKS[9][0:2] + BLOCKS[9][4:6]
+        # invert
+        block = block[::-1]
+        BLOCKS[i].add(frozenset({col+row*1j for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
+
+    BLOCKS[i] = list(BLOCKS[i]) # for purposes of the existing code, will refactor to remain a set
 
 if __name__ == "__main__":
     from pprint import pprint
