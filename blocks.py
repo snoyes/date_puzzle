@@ -41,11 +41,13 @@ for i, block in enumerate(blocks_text.split('\n\n')):
     for _ in range(4):
         # transpose
         block = [list(row) for row in zip(*block)]
-        BLOCKS[i].add(frozenset({col+row*1j for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
+        base = min(col for col, cell in enumerate(block[0]) if cell != ' ')
+        BLOCKS[i].add(frozenset({col+row*1j-base for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
 
         # invert
         block = block[::-1]
-        BLOCKS[i].add(frozenset({col+row*1j for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
+        base = min(col for col, cell in enumerate(block[0]) if cell != ' ')
+        BLOCKS[i].add(frozenset({col+row*1j-base for row, line in enumerate(block) for col, cell in enumerate(line) if cell != ' '}))
 
     BLOCKS[i] = list(BLOCKS[i]) # now that symmetries are gone, convert to a list for consistent access
 
