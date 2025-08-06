@@ -12,6 +12,7 @@
         /* Apply Inter font to the body */
         body {
             font-family: 'Inter', sans-serif;
+            text-align: center; /* Center vertically */
         }
         /* Custom styling for table cells to ensure links fill the space */
         td {
@@ -29,10 +30,15 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 min-h-screen flex items-center justify-center">
+
     <div id="calendar-container" class="max-w-6xl w-full mx-auto bg-white shadow-2xl rounded-2xl p-6 md:p-10 border border-gray-200">
         <h1 class="text-4xl md:text-5xl font-extrabold text-center text-gray-800 mb-10 tracking-tight">
             2025 Date Puzzle Solutions
         </h1>
+
+        How many solutions are there to this puzzle in 2025?
+        <img style="margin: auto; display: block;" src="puzzle_image.jpg" width=492 height=480 alt="A grid contains all the months, dates, and weekdays. Ten puzzle pieces must be placed within the frame to cover all spaces except the current date.">
+
         <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Static Calendar Months -->
             <!-- January 2025 -->
