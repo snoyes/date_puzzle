@@ -57,10 +57,6 @@ SHAPES = {
 }
 
 
-def shape_to_numeric(shape):
-    return tuple(tuple(i for i, cell in enumerate(row) if cell != " ") for row in shape)
-
-
 def all_rotations(numshape):
     maxwidth = max(x for row in numshape for x in row)
     mirror = tuple(tuple(maxwidth - x for x in row[::-1]) for row in numshape)
@@ -69,6 +65,17 @@ def all_rotations(numshape):
 
 def transpose(shape):
     return list(zip(*shape))
+
+
+def shape_to_numeric(shape):
+    # "x x
+    #  xxx"
+    #
+    # becomes
+    #
+    # (0, 2),
+    # (0, 1, 2)
+    return tuple(tuple(i for i, cell in enumerate(row) if cell != " ") for row in shape)
 
 
 def numeric_to_shape(numshape, character="#"):
@@ -93,8 +100,8 @@ def get_shape_rules():
             shapeheight = len(rotation)
             for start_row in range(HEIGHT - shapeheight + 1):
                 for start_col in range(WIDTH - shapewidth):
-
-                    rules = [shape_id + 56]
+                 
+                    rules = [shape_id + 56] # each shape must appear once
 
                     for r, row in enumerate(rotation):
                         for c in row:
