@@ -21,18 +21,16 @@ async function loadFile() {
         const response = await fetch(filename);
         if (!response.ok) throw new Error('File not found');
 
-        message.innerHTML = "Rendering...";
         const text = await response.text();
-        container.innerHTML = text;
-        render();
-        message.innerHTML = "";
+        message.innerHTML = `Rendering...`;
+        const numSolutions = render(text);
+        message.innerHTML = `${numSolutions} solutions.`;
     } catch (e) {
         message.innerHTML = `Error loading ${filename}`;
     }
 }
 
-function render() {
-    const inputText = document.getElementById('container').innerHTML.trim();
+function render(inputText) {
     const outputDiv = document.getElementById('container');
 
     let formattedHtml = '';
@@ -55,6 +53,8 @@ function render() {
     });
 
     outputDiv.innerHTML = formattedHtml;
+
+    return lines.length;
 }
 
 window.onload = function() {
