@@ -9,22 +9,25 @@ async function loadFile() {
     const weekday = document.getElementById('weekday').value;
 
     const container = document.getElementById('container')
+    const message = document.getElementById('message')
 
     if (month === '' || day === '' || weekday === '') return;
 
     const filename = `results/${pad(month)}${pad(day)}${weekday}.txt`;
 
-    container.innerHTML = "Loading...";
+    message.innerHTML = "Loading...";
 
     try {
         const response = await fetch(filename);
         if (!response.ok) throw new Error('File not found');
 
+        message.innerHTML = "Rendering...";
         const text = await response.text();
         container.innerHTML = text;
         render();
+        message.innerHTML = "";
     } catch (e) {
-        container.innerHTML = `Error loading ${filename}`;
+        message.innerHTML = `Error loading ${filename}`;
     }
 }
 
